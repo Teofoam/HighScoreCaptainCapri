@@ -4,7 +4,7 @@ import requests
 import glob
 import re
 
-# 1. 获取密钥
+# 1. Grab our secrets from GitHub
 TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
 
