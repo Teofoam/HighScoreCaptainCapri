@@ -7,26 +7,41 @@ on:
   workflow_dispatch: # 允许手动点击运行
 
 jobs:
-  push-to-phone:
+  push-problems:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # ⬆️ 升级 1：使用最新版 v4
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v5 # ⬆️ 升级 1：使用最新版 v5
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          cache: 'pip' # ⚡ 升级 2：开启 pip 缓存，加快运行速度
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install CJK fonts # 渲染题目卡片里的中文
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
 
       - name: Install Dependencies
-        # 📦 升级 3：规范化依赖安装
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install requests; fi
+          pip install -r requirements.txt
 
-      - name: Run the Python Script
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install Chromium # KaTeX 渲染用的无头浏览器
+        run: python -m playwright install --with-deps chromium
+
+      - name: Push daily problems
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DAILY_COUNT: '10' # 每天推送的题目数量
         run: python push.py

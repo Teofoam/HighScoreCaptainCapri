@@ -1,0 +1,46 @@
+name: Telegram Answer Bot
+
+# 私有仓库配置（免费额度每月 2000 分钟）：每 2 小时拉起一次，
+# 处理积压的答案后退出。未处理的消息 Telegram 保留 24 小时，
+# 所以判题最多延迟 ~2 小时，但不会丢。提交答案后想立刻出结果，
+# 可以在 Actions 页（或 GitHub 手机 App）手动 Run workflow。
+#
+# 若仓库转为公开（分钟数不限），可改成近乎全天候的即时判题：
+#    cron 改为 '0 * * * *'，LISTEN_SECONDS 改为 '3300'（55 分钟）。
+# concurrency 保证同一时刻只有一个实例在消费 getUpdates
+#（并发会被 Telegram 以 409 拒绝）。
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+  workflow_run: # 每日推题完成后立刻拉起监听
+    workflows: ["Daily Problem Pusher"]
+    types: [completed]
+
+concurrency:
+  group: telegram-listener
+  cancel-in-progress: true
+
+jobs:
+  listen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 58
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies # 监听器只需要 requests，保持轻量
+        run: pip install requests
+
+      - name: Listen for answers
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LISTEN_SECONDS: '60' # 私有仓库省额度：收完积压消息就退出
+        run: python listen.py

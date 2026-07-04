@@ -2,6 +2,7 @@
 subject: 高数
 topic: Integral with multi-forms
 weight: 7
+answer: -14/15
 ---
 # 计算以下曲线积分：
 
