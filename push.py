@@ -4,6 +4,7 @@ import requests
 import glob
 import re
 import sys
+import urllib.parse
 
 # 1. Grab our secrets from GitHub
 TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
@@ -42,10 +43,32 @@ daily_problem = random.choices(problems, weights=weights, k=1)[0]
 
 # 4. 推送到 Telegram
 def push_to_telegram(problem):
-    # 去掉了可能会引起冲突的 Markdown 符号，改为纯文本标记
     message = f"🌟 Time to soar high! Daily Problem:\n\n{problem['content']}"
     
-    if problem['img_path'] and os.path.exists(problem['img_path']):
+    # 🌟 魔法开始：寻找文本里的 LaTeX 公式（匹配 $$ 之间的内容）
+    math_match = re.search(r'\$\$(.*?)\$\$', problem['content'], re.DOTALL)
+    
+    if math_match:
+        # 1. 提取公式文本
+        latex_code = math_match.group(1).strip()
+        
+        # 2. 把公式进行 URL 编码（处理空格、加号等特殊字符）
+        encoded_latex = urllib.parse.quote(latex_code)
+        
+        # 3. 拼接 CodeCogs API 链接
+        # ⚠️ 关键修复：\dpi 和 \bg 前面必须用双斜杠 \\ 阻止 Python 转义！
+        render_url = f"https://latex.codecogs.com/png.image?\\dpi{{200}}\\bg{{white}}{encoded_latex}"
+        
+        # 4. 把渲染好的公式当成图片发出去！
+        url = f"https://api.telegram.org/bot{TOKEN}/sendPhoto"
+        
+        # 顺便把题目原文作为图片的 caption（配文）
+        clean_message = re.sub(r'\$\$.*?\$\$', '[公式见上图]', message, flags=re.DOTALL)
+        
+        payload = {'chat_id': CHAT_ID, 'photo': render_url, 'caption': clean_message[:1024]}
+        response = requests.post(url, json=payload)
+
+    elif problem['img_path'] and os.path.exists(problem['img_path']):
         url = f"https://api.telegram.org/bot{TOKEN}/sendPhoto"
         with open(problem['img_path'], 'rb') as photo:
             # 移除 parse_mode，防止 LaTeX 公式导致解析报错
