@@ -175,8 +175,9 @@ def _normalize(text):
     s = re.sub(r'√\s*(\d+(?:\.\d+)?|pi)', r'sqrt(\1)', s)
     s = s.replace('^', '**')
     s = re.sub(r'\s+', '', s)
-    # 隐式乘法：2pi -> 2*pi, 3sqrt(2) -> 3*sqrt(2), 2(3+1) -> 2*(3+1)
-    return re.sub(r'(\d)(pi\b|sqrt|\()', r'\1*\2', s)
+    # 隐式乘法：2pi -> 2*pi, 3sqrt(2) -> 3*sqrt(2), 2(3+1) -> 2*(3+1), (1+2)pi -> (1+2)*pi
+    s = re.sub(r'(\d|\))(pi\b|sqrt|\()', r'\1*\2', s)
+    return re.sub(r'(\))(\d)', r'\1*\2', s)
 
 
 def parse_number(text):
