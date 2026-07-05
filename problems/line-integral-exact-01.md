@@ -1,7 +1,7 @@
 ---
 subject: 高数
 topic: Line Integrals
-weight: 6
+weight: 7
 answer: pi^2/4
 ---
 # 计算以下曲线积分：
