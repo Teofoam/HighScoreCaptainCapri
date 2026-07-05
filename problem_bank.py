@@ -198,10 +198,17 @@ def parse_number(text):
     return None
 
 
+_MC_LETTER_RE = re.compile(r'(?<![A-Za-z])([A-Da-d])(?![A-Za-z])')
+
+
 def check_answer(problem, user_text):
     """返回 True/False；题目没有标准答案时返回 None。"""
     if not problem.answer:
         return None
+    # 选择题（answer 为单个字母 A-D）：宽容匹配 "A" / "a" / "(A)" / "选A"
+    if re.fullmatch(r'[A-Da-d]', problem.answer.strip()):
+        letters = {m.lower() for m in _MC_LETTER_RE.findall(str(user_text))}
+        return letters == {problem.answer.strip().lower()}
     expected = parse_number(problem.answer)
     given = parse_number(user_text)
     if expected is not None and given is not None:

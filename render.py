@@ -36,6 +36,8 @@ _PAGE_TEMPLATE = """<!DOCTYPE html>
   h1, h2, h3 {{ font-size: 24px; margin: 0 0 14px; }}
   p {{ margin: 0 0 12px; }}
   img {{ max-width: 100%; display: block; margin: 14px auto; }}
+  .img-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }}
+  .img-grid img {{ margin: 0; width: 100%; }}
   .katex-display {{ margin: 16px 0; }}
   .foot {{
     margin-top: 20px; padding-top: 8px; border-top: 1px dashed #ddd;
@@ -118,7 +120,14 @@ def markdown_to_html(body, base_dir):
         para = para.strip()
         if not para:
             continue
-        if para.startswith(('<h', '<img')):
+        imgs = re.findall(r'<img [^>]*>', para)
+        if imgs and not re.sub(r'<img [^>]*>|\s', '', para):
+            # 整段都是图片：多张（如选择题的四个选项图）排成两列网格
+            if len(imgs) >= 2:
+                blocks.append('<div class="img-grid">{}</div>'.format(''.join(imgs)))
+            else:
+                blocks.append(para)
+        elif para.startswith('<h'):
             blocks.append(para)
         else:
             blocks.append('<p>{}</p>'.format(para.replace('\n', '<br>')))

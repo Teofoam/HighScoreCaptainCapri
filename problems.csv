@@ -1,3 +1,0 @@
-﻿Subject,Topic,ProblemText
-高数,Line Integrals (????),"$\int_{L} (2xy^3 - y^2 \cos x) dx + (1 - 2y \sin x + 3x^2y^2) dy$, ?? $L$ ????? $2x = \pi y^2$ ??? $(0,0)$ ? $(\frac{\pi}{2}, 1)$ ????;"
-高数,Limits (??),??? $\lim_{x \to 0} \frac{\sin x - x}{x^3}$
