@@ -2,10 +2,10 @@
 subject: 高数
 topic: Line Integrals
 weight: 7
-answer: -2*pi
+answer: 0
 ---
 # 计算以下曲线积分：
 
-$$\oint_L \frac{(x+y) \mathrm{d} x-(x-y) \mathrm{d} y}{x^2+y^2}$$
+$$\int_L y \mathrm{~d} x+x \mathrm{~d} y$$ 
 
-其中 $L$ 为圆周 $x^2+y^2=a^2$（按逆时针方向绕行）。
+其中 $L$ 为圆周 $x=R \cos t, y=R \sin t$ 上对应 $t$ 从 $0$ 到 $\frac{\pi}{2}$ 的一段弧。

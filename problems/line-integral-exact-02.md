@@ -1,11 +1,11 @@
 ---
 subject: 高数
 topic: Line Integrals
-weight: 7
-answer: 0
+weight: 5
+answer: 2*pi^2+4*pi^4
 ---
 # 计算以下曲线积分：
 
-$$\int_L y \mathrm{~d} x+x \mathrm{~d} y$$ 
+$$\int_L\left(x^2+y^2\right) \mathrm{d} s$$
 
-其中 $L$ 为圆周 $x=R \cos t, y=R \sin t$ 上对应 $t$ 从 $0$ 到 $\frac{\pi}{2}$ 的一段弧。
+其中 $L$ 为曲线 $x=a(\cos t+t \sin t), y=a(\sin t-t \cos t) \quad(0 \leqslant t \leqslant 2 \pi)$。取 $a=1$。

@@ -2,10 +2,10 @@
 subject: 高数
 topic: Line Integrals
 weight: 7
-answer: pi^2/4
+answer: 2*e-2+pi*e/4
 ---
 # 计算以下曲线积分：
 
-$$\int_{L} (2xy^3 - y^2 \cos x)\,\mathrm{d}x + (1 - 2y \sin x + 3x^2y^2)\,\mathrm{d}y$$
+$$\oint_L \mathrm{e}^{\sqrt{x^2+y^2}} \mathrm{~d} s$$
 
-其中 $L$ 为抛物线 $2x = \pi y^2$ 上由点 $(0,0)$ 到点 $\left(\frac{\pi}{2}, 1\right)$ 的一段弧。
+其中 $L$ 为圆周 $x^2+y^2=a^2$ ，直线 $y=x$ 及 $x$ 轴在第一象限内所围成的扇形的整个边界。取 $a=1$。

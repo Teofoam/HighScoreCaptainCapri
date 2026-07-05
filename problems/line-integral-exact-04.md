@@ -2,10 +2,10 @@
 subject: 高数
 topic: Line Integrals
 weight: 7
-answer: -14/15
+answer: -2*pi
 ---
 # 计算以下曲线积分：
 
-$$\int_L\left(x^2-2 x y\right) \mathrm{d} x+\left(y^2-2 x y\right) \mathrm{d} y$$
+$$\oint_L \frac{(x+y) \mathrm{d} x-(x-y) \mathrm{d} y}{x^2+y^2}$$
 
-其中 $L$ 是抛物线 $y=x^2$ 上从点 $(-1,1)$ 到点 $(1,1)$ 的一段弧。
+其中 $L$ 为圆周 $x^2+y^2=a^2$（按逆时针方向绕行）。
