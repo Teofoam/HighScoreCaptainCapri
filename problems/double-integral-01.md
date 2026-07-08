@@ -1,7 +1,7 @@
 ---
 subject: 高数
 topic: Double Integrals
-weight: 5
+weight: 3
 answer: 1/8
 ---
 计算二重积分：
