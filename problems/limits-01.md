@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Limits
 weight: 4
 answer: -1/6

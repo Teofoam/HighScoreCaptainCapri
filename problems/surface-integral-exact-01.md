@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Surface Integrals
 weight: 7
 answer: (1+sqrt(2))*pi/2

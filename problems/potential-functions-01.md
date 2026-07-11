@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Potential Function, Generalized Stokes Theorem, Line Integral
 weight: 6
 answer: 236

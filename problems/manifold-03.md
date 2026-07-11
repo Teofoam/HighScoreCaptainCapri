@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Manifold, Tangent Plane and Normal Line
 weight: 4
 answer: 4

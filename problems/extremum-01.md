@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Extrema
 weight: 4
 answer: -3

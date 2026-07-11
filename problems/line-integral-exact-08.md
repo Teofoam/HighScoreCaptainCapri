@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Line Integrals
 weight: 7
 answer: pi^2/4

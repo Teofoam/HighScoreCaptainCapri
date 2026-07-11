@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Optimization, Constrained Extremum
 weight: 4
 answer: 1/4

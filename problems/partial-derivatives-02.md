@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Partial Derivatives
 weight: 3
 answer: e^2+3*e+2

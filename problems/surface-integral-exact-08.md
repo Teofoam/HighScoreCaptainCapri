@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Surface Integrals, Generalized Stokes Theorem
 weight: 3
 answer: 32*pi/15

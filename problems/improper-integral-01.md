@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Improper Integrals
 weight: 5
 answer: 1

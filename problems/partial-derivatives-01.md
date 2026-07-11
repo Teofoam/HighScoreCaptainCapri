@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Partial Derivatives
 weight: 3
 answer: (1+2*ln(2))/5

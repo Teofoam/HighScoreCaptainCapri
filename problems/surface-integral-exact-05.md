@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Surface Integrals
 weight: 7
 answer: 3*pi/2

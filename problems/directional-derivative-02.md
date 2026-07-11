@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Directional Derivative and Gradient
 weight: 4
 answer: 1.4

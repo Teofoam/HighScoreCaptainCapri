@@ -28,6 +28,7 @@ topic: Limits          # 知识点
 weight: 5              # 抽中概率权重，默认 1
 answer: -1/6           # 标准答案：数字、分数、pi 表达式或文本
 tolerance: 0.01        # 可选：数值判题的相对误差，默认 0.01
+disabled: true         # 可选：置 true 后不再进入每日抽取（见下方"埋葬题目"）
 ---
 题目正文，支持行内公式 $\lim_{x \to 0}$ 与块级公式：
 
@@ -35,6 +36,14 @@ $$\int_0^{+\infty} x e^{-x}\,\mathrm{d}x$$
 
 也支持插图：![图](./images/xxx.png)
 ```
+
+### 埋葬题目
+
+想让某道题（或某个学科的所有题）暂时不再被抽中，但又不想删掉文件，
+在 frontmatter 里加一行 `disabled: true` 即可（`weight: 0` **不管用**——
+权重会被 `select_daily` 强制拉到最低 1，所以 0 跟 1 效果一样）。
+`disabled` 的题仍然会被 `load_problems` 读入，旧消息还能正常判题，
+只是不会出现在新一天的抽取结果里。想重新启用就删掉这一行或改成 `false`。
 
 ## 本地调试
 

@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Double Integrals
 weight: 3
 answer: 1/8

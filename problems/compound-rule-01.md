@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Compound Rule of Partial Derivatives
 weight: 5
 answer: 40

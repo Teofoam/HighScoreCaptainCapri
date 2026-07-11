@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Directional Derivative and Gradient
 weight: 4
 answer: sqrt(10)/2

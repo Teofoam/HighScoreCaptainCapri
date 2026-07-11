@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Optimization, Extremum
 weight: 4
 answer: 2

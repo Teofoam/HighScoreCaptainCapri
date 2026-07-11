@@ -1,5 +1,6 @@
 ---
 subject: 高数
+disabled: false
 topic: Line Integrals, Generalized Stokes Theorem
 weight: 5
 answer: -sqrt(3)*pi
