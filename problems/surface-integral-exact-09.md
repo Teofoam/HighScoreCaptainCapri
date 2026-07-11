@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Surface Integrals, Generalized Stokes Theorem
-weight: 2
+weight: 4
 answer: 14*pi/45
 ---
 # 计算以下曲面积分：
