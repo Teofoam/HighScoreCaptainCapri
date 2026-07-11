@@ -8,6 +8,7 @@ topic: Limits
 weight: 5                # 抽中概率权重，默认 1
 answer: -1/6             # 标准答案，支持数字/分数/pi 等表达式，也可以是文本
 tolerance: 0.01          # 数值判题的相对误差，默认 0.01
+disabled: true           # 可选；置 true 后不再进入每日抽取，但仍可判题
 ---
 正文支持 $inline$ 与 $$block$$ LaTeX，以及 ![图](./images/xxx.png)
 """
@@ -31,6 +32,8 @@ class Problem:
         self.subject = meta.get('subject', '未分类')
         self.topic = meta.get('topic', '')
         self.weight = _to_int(meta.get('weight'), 1)
+        # disabled: true 的题不再进入每日抽取，但仍可判题（已推送的旧题还能回答）
+        self.disabled = str(meta.get('disabled', '')).strip().lower() in ('true', '1', 'yes')
         self.answer = meta.get('answer')  # None 表示暂无标准答案
         self.tolerance = _to_float(meta.get('tolerance'), DEFAULT_TOLERANCE)
         self.body = body
@@ -88,7 +91,10 @@ def get_problem(problems, pid):
 
 
 def select_daily(problems, count):
-    """按权重不放回抽取 count 道题；题库中出现过的学科至少各占一题。"""
+    """按权重不放回抽取 count 道题；题库中出现过的学科至少各占一题。
+
+    disabled 的题目不参与抽取。"""
+    problems = [p for p in problems if not p.disabled]
     count = min(count, len(problems))
     remaining = list(problems)
     picked = []
@@ -175,8 +181,9 @@ def _normalize(text):
     s = re.sub(r'√\s*(\d+(?:\.\d+)?|pi)', r'sqrt(\1)', s)
     s = s.replace('^', '**')
     s = re.sub(r'\s+', '', s)
-    # 隐式乘法：2pi -> 2*pi, 3sqrt(2) -> 3*sqrt(2), 2(3+1) -> 2*(3+1), (1+2)pi -> (1+2)*pi
-    s = re.sub(r'(\d|\))(pi\b|sqrt|\()', r'\1*\2', s)
+    # 隐式乘法：2pi -> 2*pi, 3sqrt(2) -> 3*sqrt(2), 2ln(2) -> 2*ln(2), (1+2)pi -> (1+2)*pi
+    # 注意不含 e：2e5 是科学计数法
+    s = re.sub(r'(\d|\))(pi\b|sqrt|ln|log|sin|cos|tan|exp|\()', r'\1*\2', s)
     return re.sub(r'(\))(\d)', r'\1*\2', s)
 
 
