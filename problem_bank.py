@@ -181,8 +181,9 @@ def _normalize(text):
     s = re.sub(r'√\s*(\d+(?:\.\d+)?|pi)', r'sqrt(\1)', s)
     s = s.replace('^', '**')
     s = re.sub(r'\s+', '', s)
-    # 隐式乘法：2pi -> 2*pi, 3sqrt(2) -> 3*sqrt(2), 2ln(2) -> 2*ln(2), (1+2)pi -> (1+2)*pi
-    # 注意不含 e：2e5 是科学计数法
+    # 隐式乘法：2pi -> 2*pi, 3sqrt(2) -> 3*sqrt(2), 2ln(2) -> 2*ln(2), (1+2)pi -> (1+2)*pi,
+    # pi(pi-2) -> pi*(pi-2)。注意不含 e：2e5 是科学计数法
+    s = re.sub(r'(pi)(\(|sqrt|ln|log|sin|cos|tan|exp)', r'\1*\2', s)
     s = re.sub(r'(\d|\))(pi\b|sqrt|ln|log|sin|cos|tan|exp|\()', r'\1*\2', s)
     return re.sub(r'(\))(\d)', r'\1*\2', s)
 

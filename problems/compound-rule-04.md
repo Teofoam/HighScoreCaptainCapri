@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Compound Rule of Partial Derivatives, Implicit Function Theorem
-weight: 5
+weight: 6
 answer: 2
 ---
 # 求满足此方程的 $\frac{\partial z}{\partial x}$ 及 $\frac{\partial z}{\partial y}$：

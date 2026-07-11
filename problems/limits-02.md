@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Limits
-weight: 5
+weight: 3
 answer: 2
 ---
 # 求下列极限：

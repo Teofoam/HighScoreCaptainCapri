@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Manifold, Tangent Plane and Normal Line
-weight: 4
+weight: 5
 answer: 4
 ---
 # 求曲面在给定点处的切平面及法线方程：

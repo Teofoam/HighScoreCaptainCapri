@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Partial Derivatives
-weight: 3
+weight: 4
 answer: (1+2*ln(2))/5
 ---
 # 求以下函数的偏导数：

@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Manifold, Tangent Line and Normal Plane
-weight: 4
+weight: 5
 answer: -4/3
 ---
 # 求曲线上满足条件的点：

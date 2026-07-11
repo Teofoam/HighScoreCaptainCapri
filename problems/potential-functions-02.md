@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Potential Function
-weight: 5
+weight: 6
 answer: 1
 ---
 # 验证下列的 1-形式是某个势函数 $\phi(x, y)$ 的全微分，并求出 $\phi(x, y)$：

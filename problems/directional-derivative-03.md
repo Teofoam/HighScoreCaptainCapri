@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Directional Derivative and Gradient
-weight: 4
+weight: 5
 answer: sqrt(21)
 ---
 # 求函数变化最快的方向：

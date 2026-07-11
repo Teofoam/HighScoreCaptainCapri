@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Optimization, Extremum
-weight: 4
+weight: 6
 answer: 2
 ---
 # 求下列函数的极值点和极值：

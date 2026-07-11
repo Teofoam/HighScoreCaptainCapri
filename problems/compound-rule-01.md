@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Compound Rule of Partial Derivatives
-weight: 5
+weight: 6
 answer: 40
 ---
 # 求下列函数的二阶偏导数 $\frac{\partial^2 z}{\partial x^2}$、$\frac{\partial^2 z}{\partial x \partial y}$、$\frac{\partial^2 z}{\partial y^2}$：

@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Double Integrals
-weight: 3
+weight: 6
 answer: 1/8
 ---
 # 计算以下二重积分：

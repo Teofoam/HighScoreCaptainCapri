@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Directional Derivative and Gradient
-weight: 4
+weight: 5
 answer: 12/sqrt(14)
 ---
 # 求下列方向导数：

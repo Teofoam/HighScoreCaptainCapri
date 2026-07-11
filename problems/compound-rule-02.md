@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Compound Rule of Partial Derivatives
-weight: 5
+weight: 6
 answer: 14
 ---
 # 求全导数 $\dfrac{\mathrm{d} z}{\mathrm{d} t}$：

@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Line Integrals, Generalized Stokes Theorem
-weight: 5
+weight: 6
 answer: sin(2)/4-7/6
 ---
 # 计算以下曲线积分：

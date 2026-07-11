@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Line Integrals
-weight: 5
+weight: 6
 answer: 2*pi^2+4*pi^4
 ---
 # 计算以下曲线积分：

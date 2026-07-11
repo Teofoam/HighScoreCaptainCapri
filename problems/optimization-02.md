@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Optimization, Constrained Extremum
-weight: 4
+weight: 6
 answer: 4*pi
 ---
 # 求解以下最优化问题：

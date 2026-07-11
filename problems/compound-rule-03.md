@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Compound Rule of Partial Derivatives, Implicit Function Theorem
-weight: 5
+weight: 6
 answer: 3
 ---
 # 求以下偏导数的组合：

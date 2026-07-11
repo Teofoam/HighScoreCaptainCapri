@@ -2,7 +2,7 @@
 subject: 高数
 disabled: false
 topic: Optimization, Constrained Extremum
-weight: 4
+weight: 6
 answer: 1/4
 ---
 # 求下列条件极值：
