@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Ideal Gas & Thermodynamics
 weight: 5
 answer: 1728

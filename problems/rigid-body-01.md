@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Rigid Body Rotation
 weight: 5
 answer: 14.7

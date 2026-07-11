@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Electrostatics
 weight: 5
 answer: 2e5

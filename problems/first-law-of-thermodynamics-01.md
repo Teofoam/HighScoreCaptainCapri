@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: First Law of Thermodynamics
 weight: 6
 answer: 166

@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Simple Harmonic Motion
 weight: 5
 answer: pi/10

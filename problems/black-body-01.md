@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Black-body Radiation
 weight: 4
 answer: D

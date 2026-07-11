@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Mass-Energy Relation
 weight: 4
 answer: 0.489

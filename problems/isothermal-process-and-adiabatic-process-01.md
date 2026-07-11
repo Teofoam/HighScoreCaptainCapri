@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Isothermal Process, Adiabatic Process
 weight: 5
 answer: A

@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Photoelectric Effect
 weight: 5
 answer: 1.1

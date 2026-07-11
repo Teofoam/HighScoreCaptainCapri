@@ -1,5 +1,6 @@
 ---
 subject: 大物
+disabled: true
 topic: Magnetic Field
 weight: 5
 answer: 4e-5
