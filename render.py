@@ -65,6 +65,14 @@ document.addEventListener('DOMContentLoaded', async () => {{
       }});
     }}
     await document.fonts.ready;
+    // 公式太长会撑出卡片右边界，截图时直接被裁掉；量出溢出比例后缩小字号让它老实待在卡片里
+    document.querySelectorAll('.katex-display').forEach(el => {{
+      const available = el.clientWidth;
+      if (available <= 0 || el.scrollWidth <= available) return;
+      const scale = Math.max(0.5, (available / el.scrollWidth) * 0.98);
+      const baseSize = parseFloat(getComputedStyle(el).fontSize);
+      el.style.fontSize = (baseSize * scale) + 'px';
+    }});
     await Promise.all(Array.from(document.images).map(img =>
       img.complete ? null : new Promise(res => {{ img.onload = res; img.onerror = res; }})));
   }} catch (e) {{}}
