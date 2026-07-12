@@ -6,7 +6,9 @@
 subject: 高数            # 或 大物
 topic: Limits
 weight: 5                # 抽中概率权重，默认 1
-answer: -1/6             # 标准答案，支持数字/分数/pi 等表达式，也可以是文本
+answer: -1/6             # 标准答案，支持数字/分数/pi 等表达式，也可以是文本；
+                         # 用 " | " 分隔可要求多部分作答（如 "5/36 | (-6,-2)"，
+                         # 区间按端点数值+开闭判定），用户各部分用 ; 或 ； 分隔
 tolerance: 0.01          # 数值判题的相对误差，默认 0.01
 disabled: true           # 可选；置 true 后不再进入每日抽取，但仍可判题
 ---
@@ -208,20 +210,63 @@ def parse_number(text):
 
 
 _MC_LETTER_RE = re.compile(r'(?<![A-Za-z])([A-Da-d])(?![A-Za-z])')
+_INTERVAL_RE = re.compile(r'([\[(])([^,]+),([^,]+)([\])])')
 
 
-def check_answer(problem, user_text):
-    """返回 True/False；题目没有标准答案时返回 None。"""
-    if not problem.answer:
+def _parse_interval(text):
+    """把 "(-6,-2]" / "x∈(−6, −2]" 解析成 (左括号, 左端点, 右端点, 右括号)。"""
+    s = str(text).strip().translate(_FULLWIDTH).replace('−', '-')
+    if '∈' in s:
+        s = s.split('∈', 1)[1]
+    s = re.sub(r'\s+', '', s)
+    m = _INTERVAL_RE.fullmatch(s)
+    if not m:
         return None
+    lo, hi = parse_number(m.group(2)), parse_number(m.group(3))
+    if lo is None or hi is None:
+        return None
+    return m.group(1), lo, hi, m.group(4)
+
+
+def _check_single(problem, expected_text, user_text):
+    expected_text = str(expected_text).strip()
     # 选择题（answer 为单个字母 A-D）：宽容匹配 "A" / "a" / "(A)" / "选A"
-    if re.fullmatch(r'[A-Da-d]', problem.answer.strip()):
+    if re.fullmatch(r'[A-Da-d]', expected_text):
         letters = {m.lower() for m in _MC_LETTER_RE.findall(str(user_text))}
-        return letters == {problem.answer.strip().lower()}
-    expected = parse_number(problem.answer)
+        return letters == {expected_text.lower()}
+    # 区间答案（如收敛域 "(-6,-2]"）：端点按数值比对，开闭必须完全一致
+    exp_iv = _parse_interval(expected_text)
+    if exp_iv is not None:
+        giv_iv = _parse_interval(user_text)
+        if giv_iv is None:
+            return False
+        tol = max(problem.tolerance, 0.0)
+
+        def close(a, b):
+            return abs(b - a) <= max(1e-9, tol * abs(a))
+
+        return (exp_iv[0] == giv_iv[0] and exp_iv[3] == giv_iv[3]
+                and close(exp_iv[1], giv_iv[1]) and close(exp_iv[2], giv_iv[2]))
+    expected = parse_number(expected_text)
     given = parse_number(user_text)
     if expected is not None and given is not None:
         tol = max(problem.tolerance, 0.0)
         return abs(given - expected) <= max(1e-9, tol * abs(expected))
     # 文本答案：忽略大小写与空白直接比对
-    return _normalize(user_text).casefold() == _normalize(problem.answer).casefold()
+    return _normalize(user_text).casefold() == _normalize(expected_text).casefold()
+
+
+def check_answer(problem, user_text):
+    """返回 True/False；题目没有标准答案时返回 None。
+
+    answer 里用 " | " 分隔的多部分答案（如 "5/36 | (-6,-2)"）要求用户
+    逐项作答，各部分用 ; 、； 或 | 分隔，全部答对才算对。"""
+    if not problem.answer:
+        return None
+    if '|' in str(problem.answer):
+        parts = [p for p in (s.strip() for s in str(problem.answer).split('|')) if p]
+        given = [g for g in (s.strip() for s in re.split(r'[;；|\n]', str(user_text))) if g]
+        if len(given) != len(parts):
+            return False
+        return all(_check_single(problem, p, g) for p, g in zip(parts, given))
+    return _check_single(problem, problem.answer, user_text)
