@@ -85,6 +85,23 @@ document.addEventListener('DOMContentLoaded', async () => {{
 _MATH_TOKEN = '⁉KATEX{}⁉'  # 不会出现在正文里的占位符
 
 
+def view(item):
+    """把 problem_bank.Problem 和 capri 的 Task 归一成渲染要的五个字段。
+
+    两条出题通道（手录的 problems/*.md 与生成器）共用同一套渲染和推送，
+    所以差异只在这里抹平一次。
+    """
+    if hasattr(item, 'stem'):  # capri.core.task.Task
+        return (item.subject, item.topic, item.ref, item.stem, '.')
+    return (item.subject, item.topic, item.id, item.body,
+            os.path.dirname(item.path))
+
+
+def safe_name(ident):
+    """题目 id 直接当文件名用不安全：生成题的 id 形如 sop-simplify#00000007。"""
+    return re.sub(r'[^A-Za-z0-9._-]', '-', ident)
+
+
 def _extract_math(text):
     """先把公式抠出来，防止 markdown 转换把 LaTeX 里的符号弄坏。"""
     segments = []
@@ -122,6 +139,8 @@ def markdown_to_html(body, base_dir):
                   lambda m: '<h{0}>{1}</h{0}>'.format(len(m.group(1)), m.group(2)),
                   text, flags=re.MULTILINE)
     text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', text)
+    # 生成器的题面里会用反引号标作答格式，如 `AB' + CD`
+    text = re.sub(r'`([^`\n]+)`', r'<code>\1</code>', text)
 
     blocks = []
     for para in re.split(r'\n\s*\n', text):
@@ -146,18 +165,19 @@ def markdown_to_html(body, base_dir):
     return result
 
 
-def build_page(problem):
+def build_page(item):
+    subject, topic, ident, body, base_dir = view(item)
     return _PAGE_TEMPLATE.format(
         katex=_KATEX_VERSION,
-        subject=html.escape(problem.subject),
-        topic=html.escape(problem.topic),
-        pid=html.escape(problem.id),
-        body=markdown_to_html(problem.body, os.path.dirname(problem.path)),
+        subject=html.escape(subject),
+        topic=html.escape(topic),
+        pid=html.escape(ident),
+        body=markdown_to_html(body, base_dir),
     )
 
 
-def render_problems(problems, out_dir):
-    """渲染一批题目，返回 {problem_id: png_path}。共用一个浏览器实例。"""
+def render_problems(items, out_dir):
+    """渲染一批题目，返回 {题目id: png_path}。共用一个浏览器实例。"""
     from playwright.sync_api import sync_playwright
 
     os.makedirs(out_dir, exist_ok=True)
@@ -166,13 +186,14 @@ def render_problems(problems, out_dir):
         browser = pw.chromium.launch()
         page = browser.new_page(viewport={'width': 940, 'height': 600},
                                 device_scale_factor=2)
-        for problem in problems:
-            page.set_content(build_page(problem), wait_until='load')
+        for item in items:
+            ident = view(item)[2]
+            page.set_content(build_page(item), wait_until='load')
             page.wait_for_function('window.__done === true', timeout=30000)
             if not page.evaluate('!!window.renderMathInElement'):
-                print(f'⚠️ KaTeX 未能加载，{problem.id} 将以纯文本渲染')
-            path = os.path.join(out_dir, problem.id + '.png')
+                print(f'⚠️ KaTeX 未能加载，{ident} 将以纯文本渲染')
+            path = os.path.join(out_dir, safe_name(ident) + '.png')
             page.locator('#card').screenshot(path=path)
-            results[problem.id] = path
+            results[ident] = path
         browser.close()
     return results

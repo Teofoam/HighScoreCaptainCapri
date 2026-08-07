@@ -5,6 +5,13 @@ on:
     # 每天北京时间早上 8:00 执行
     - cron: '0 0 * * *'
   workflow_dispatch: # 允许手动点击运行
+    inputs:
+      daily_count:
+        description: '今天总共推几道题'
+        default: '10'
+      generated_count:
+        description: '其中来自生成器（数电/模电）的道数'
+        default: '3'
 
 jobs:
   push-problems:
@@ -43,5 +50,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          DAILY_COUNT: '10' # 每天推送的题目数量
+          # 定时触发时 inputs 为空，回落到默认值
+          DAILY_COUNT: ${{ inputs.daily_count || '10' }}
+          GENERATED_COUNT: ${{ inputs.generated_count || '3' }}
         run: python push.py
