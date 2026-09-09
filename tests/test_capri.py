@@ -5,14 +5,15 @@
 """
 import os
 import sys
+from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from capri import generators  # noqa: F401,E402  导入即注册生成器
 from capri.core import grading, quantity, registry, session  # noqa: E402
 from capri.core.task import Blank, Task  # noqa: E402
-from capri.digital import boolean, minimize  # noqa: E402
-from capri.digital.grading import BooleanEquiv  # noqa: E402
+from capri.digital import boolean, minimize, numbering  # noqa: E402
+from capri.digital.grading import BooleanEquiv, RadixLiteral  # noqa: E402
 
 VARS2 = ['A', 'B']
 VARS3 = ['A', 'B', 'C']
@@ -392,6 +393,162 @@ def test_listen_judges_a_generated_task():
     right = boolean.to_ascii(minimize.to_expr(cover, task.params['vars']))
     assert '正确' in listen.judge_reply(task, right)
     assert '❌' in listen.judge_reply(task, 'A')
+
+
+# ------------------------------------------------------------ 数制与码制
+
+def test_numbering_radix_roundtrip():
+    for base in (2, 8, 10, 16):
+        for value in (0, 1, 9, 63, 255, 4095):
+            text = numbering.to_radix(value, base)
+            assert numbering.parse_radix(text, base) == value, (base, value)
+
+
+def test_numbering_parse_is_tolerant():
+    """写法差异不该判错 —— 跟记号解析认六种非号是一个道理。"""
+    for text in ('5A', '5a', '0x5A', '5AH', '(5A)16', '(5A)₁₆', '005A', '5 A'):
+        assert numbering.parse_radix(text, 16) == 90, text
+    for text in ('1011010', '0b1011010', '1011010B', '101 1010', '(1011010)₂'):
+        assert numbering.parse_radix(text, 2) == 90, text
+
+
+def test_numbering_rejects_digits_outside_the_base():
+    """二进制里写出个 2 是真错了，不是写法问题。"""
+    assert numbering.parse_radix('1012', 2) is None
+    assert numbering.parse_radix('89', 8) is None
+    assert numbering.parse_radix('5G', 16) is None
+    assert numbering.parse_radix('', 2) is None
+
+
+def test_numbering_precision_digits():
+    """经典考法：精度优于 0.1% 要保留 10 位（2^-10 = 0.098%）。"""
+    assert numbering.precision_digits(Fraction(1, 1000)) == 10
+    assert numbering.precision_digits(Fraction(5, 1000)) == 8
+    assert numbering.precision_digits(Fraction(1, 100)) == 7
+    # 边界：2^-10 恰好小于 1/1000，2^-9 不够
+    assert Fraction(1, 2 ** 10) < Fraction(1, 1000) <= Fraction(1, 2 ** 9)
+
+
+def test_numbering_fraction_is_exact_not_float():
+    """0.1 在二进制里是无限循环，用 float 算到十几位就飘了。"""
+    bits = numbering.frac_digits(Fraction(1, 10), 2, 24)
+    assert bits == '000110011001100110011001', bits
+    # 0.6875 = 11/16 是有限小数，第 4 位之后必须全是 0
+    assert numbering.frac_digits(Fraction(11, 16), 2, 10) == '1011000000'
+
+
+def test_numbering_bcd():
+    assert numbering.to_bcd(496) == '010010010110'
+    assert numbering.from_bcd('0100 1001 0110') == 496
+    assert numbering.from_bcd('1010') is None      # 伪码
+    assert numbering.from_bcd('01011') is None     # 位数不是 4 的倍数
+
+
+def test_numbering_gray_keeps_width():
+    for width in (4, 5, 8):
+        for value in range(1 << width):
+            binary = format(value, '0{}b'.format(width))
+            gray = numbering.bin_to_gray(binary)
+            assert len(gray) == width
+            assert numbering.gray_to_bin(gray) == binary
+    # 相邻码字只差一位 —— 格雷码的定义
+    for value in range((1 << 4) - 1):
+        a = numbering.bin_to_gray(format(value, '04b'))
+        b = numbering.bin_to_gray(format(value + 1, '04b'))
+        assert sum(x != y for x, y in zip(a, b)) == 1
+
+
+def test_numbering_machine_codes():
+    assert numbering.machine_codes(-37) == ('10100101', '11011010', '11011011')
+    assert numbering.machine_codes(37) == ('00100101',) * 3   # 正数三码相同
+    try:
+        numbering.machine_codes(-128)   # 8 位里 -128 没有原码/反码
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('-128 应该被挡在外面')
+
+
+# ------------------------------------------------------- 数制判题器与生成器
+
+def _first_task(variant, limit=400):
+    for seed in range(limit):
+        task = registry.build('number-system', seed)
+        if task.params['variant'] == variant:
+            return task
+    raise AssertionError(f'{limit} 个种子里没抽到 {variant}')
+
+
+def test_radix_literal_accepts_any_notation():
+    grader = RadixLiteral(90, 16)
+    ctx = grading.GradeContext(task=None)
+    for text in ('5A', '5a', '0x5A', '5AH', '005A'):
+        assert grader.grade(text, ctx).ok, text
+    assert not grader.grade('90', ctx).ok      # 那是十进制的 90
+    assert not grader.grade('5G', ctx).ok      # 根本不是十六进制数
+
+
+def test_radix_literal_pads_trailing_zeros():
+    """要求 8 位小数，写 0.1011 和 0.10110000 是同一个数，都算对。"""
+    grader = RadixLiteral(Fraction(11, 16), 2, frac_digits=8)
+    ctx = grading.GradeContext(task=None)
+    assert grader.grade('0.1011', ctx).ok
+    assert grader.grade('0.10110000', ctx).ok
+    assert not grader.grade('0.101', ctx).ok   # 截少了一位，值就变了
+
+
+def test_number_system_carries_the_digit_count():
+    """位数那一空填错，转换结果按用户自己填的位数判 —— 不连坐。"""
+    task = _first_task('precision')
+    n = task.params['n']
+    short = numbering.frac_digits(Fraction(task.params['value']), 2, n - 1)
+    head = task.params['binary'].split('.')[0]
+    results = grading.grade_task(task, f'{n - 1} ; {head}.{short}')
+    assert len(results) == 2
+    assert not results[0][1].ok, '位数填错了却判对'
+    assert results[1][1].ok, '结果跟自己填的位数是自洽的，不该连坐'
+
+
+def test_number_system_answers_itself():
+    """生成器给出的标准答案，必须能被它自己配的判题器判对。
+
+    这是生成器最重要的不变式：题面、标准答案、判题器三者同源，
+    一旦哪个变体的答案格式和判题器对不上，这里立刻炸。
+    """
+    for seed in range(300):
+        task = registry.build('number-system', seed)
+        results = grading.grade_task(task, task.params['answer'])
+        assert results, (seed, task.params)
+        assert all(v.ok for _, v in results), (seed, task.params)
+
+
+def test_number_system_covers_every_variant():
+    seen = {registry.build('number-system', s).params['variant']
+            for s in range(300)}
+    assert seen == {'radix', 'precision', 'bcd', 'gray', 'complement'}, seen
+
+
+def test_number_system_is_deterministic():
+    for seed in (0, 1, 7, 42, 0x0513499f):
+        assert registry.verify_deterministic('number-system', seed), seed
+
+
+def test_number_system_rejects_wrong_answers():
+    task = _first_task('complement')
+    right = task.params['answer']
+    wrong = right[:-1] + ('0' if right[-1] == '1' else '1')
+    assert all(v.ok for _, v in grading.grade_task(task, right))
+    assert not all(v.ok for _, v in grading.grade_task(task, wrong))
+
+
+def test_render_blockquote():
+    """题面里的 > 提示要变成引用块，不能把 &gt; 直接印在卡片上。"""
+    import render
+    src = chr(10).join(['正文', '', '> 提示一行', '> 提示两行'])
+    out = render.markdown_to_html(src, '.')
+    assert '<blockquote>' in out
+    assert '&gt;' not in out
+    assert out.count('<p>') == 3   # 正文一段 + 引用里两行
 
 
 def _main():

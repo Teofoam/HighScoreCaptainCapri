@@ -11,7 +11,7 @@ on:
         default: '10'
       generated_count:
         description: '其中来自生成器（数电/模电）的道数'
-        default: '3'
+        default: '6'
 
 jobs:
   push-problems:
@@ -52,5 +52,5 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           # 定时触发时 inputs 为空，回落到默认值
           DAILY_COUNT: ${{ inputs.daily_count || '10' }}
-          GENERATED_COUNT: ${{ inputs.generated_count || '3' }}
+          GENERATED_COUNT: ${{ inputs.generated_count || '6' }}
         run: python push.py

@@ -39,6 +39,13 @@ _PAGE_TEMPLATE = """<!DOCTYPE html>
   .img-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }}
   .img-grid img {{ margin: 0; width: 100%; }}
   .katex-display {{ margin: 16px 0; }}
+  blockquote {{
+    margin: 14px 0; padding: 2px 0 2px 16px;
+    border-left: 4px solid #d8d8e2; color: #556;
+    font-size: 20px;
+  }}
+  blockquote p {{ margin: 0 0 6px; }}
+  blockquote p:last-child {{ margin-bottom: 0; }}
   .foot {{
     margin-top: 20px; padding-top: 8px; border-top: 1px dashed #ddd;
     font-size: 14px; color: #99a;
@@ -156,6 +163,12 @@ def markdown_to_html(body, base_dir):
                 blocks.append(para)
         elif para.startswith('<h'):
             blocks.append(para)
+        elif all(ln.startswith('&gt;') for ln in para.splitlines()):
+            # 提示/注意事项写成引用块。html.escape 已经把 > 换成了 &gt;，
+            # 所以这里剥的是转义后的形态
+            inner = ''.join('<p>{}</p>'.format(ln[4:].strip())
+                            for ln in para.splitlines())
+            blocks.append('<blockquote>{}</blockquote>'.format(inner))
         else:
             blocks.append('<p>{}</p>'.format(para.replace('\n', '<br>')))
     result = '\n'.join(blocks)

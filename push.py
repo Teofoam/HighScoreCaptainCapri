@@ -11,7 +11,7 @@
 
 环境变量：
     DAILY_COUNT       今天总共推几道，默认 10
-    GENERATED_COUNT   其中几道来自生成器，默认 3；静态题不够时会自动多生成补齐
+    GENERATED_COUNT   其中几道来自生成器，默认 6；静态题不够时会自动多生成补齐
 """
 import datetime
 import os
@@ -67,7 +67,7 @@ def collect(count, generated_count):
 def main():
     dry_run = '--dry-run' in sys.argv
     count = int(os.environ.get('DAILY_COUNT', '10'))
-    generated_count = int(os.environ.get('GENERATED_COUNT', '3'))
+    generated_count = int(os.environ.get('GENERATED_COUNT', '6'))
 
     picked = collect(count, generated_count)
     if not picked:
