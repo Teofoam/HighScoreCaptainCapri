@@ -126,25 +126,60 @@ def precision_digits(tol, base=2):
     return n
 
 
-def to_bcd(value, group=4):
-    """非负十进制整数 → 8421 BCD，每个十进制位固定 4 bit。"""
+# BCD 各码制相对 8421 的偏移。余 3 码就是 8421 加 3 —— 它的好处是
+# 0 不再是全 0，且 9 的补正好是 0 的反码，做减法时不用额外判零
+BCD_OFFSET = {'8421': 0, '余3': 3}
+
+
+def encode_bcd(text, code='8421'):
+    """十进制数串 → BCD 位串。小数点原样保留（64.27 → 01100100.00100111）。
+
+    按"每个十进制位单独编码"来做，所以小数部分不需要任何特殊处理 ——
+    这正是 BCD 相对纯二进制的卖点：十进制小数不会变成无限循环。
+    """
+    offset = BCD_OFFSET[code]
+    out = []
+    for ch in str(text).strip():
+        if ch == '.':
+            out.append('.')
+            continue
+        if not ch.isdigit():
+            raise ValueError(f'{text!r} 不是十进制数串')
+        out.append(format(int(ch) + offset, '04b'))
+    return ''.join(out)
+
+
+def decode_bcd(bits, code='8421'):
+    """BCD 位串 → 十进制数串。位数不是 4 的倍数、或出现伪码时返回 None。"""
+    offset = BCD_OFFSET[code]
+    s = ''.join(str(bits).split())
+    out = []
+    for part in s.split('.'):
+        if len(part) % 4 or any(c not in '01' for c in part):
+            return None
+        digits = []
+        for i in range(0, len(part), 4):
+            value = int(part[i:i + 4], 2) - offset
+            if not 0 <= value <= 9:   # 8421 的 1010~1111、余3 的 0000~0010 都是伪码
+                return None
+            digits.append(str(value))
+        out.append(''.join(digits))
+    return '.'.join(out)
+
+
+def to_bcd(value, code='8421'):
+    """非负十进制整数 → BCD 位串。"""
     if value < 0:
         raise ValueError('BCD 不表示负数')
-    return ''.join(format(int(d), '04b') for d in str(int(value)))
+    return encode_bcd(int(value), code)
 
 
-def from_bcd(bits):
-    """8421 BCD → 十进制整数。位数不是 4 的倍数、或出现 1010~1111 时返回 None。"""
-    s = ''.join(str(bits).split())
-    if not s or len(s) % 4 or any(c not in '01' for c in s):
+def from_bcd(bits, code='8421'):
+    """BCD 位串 → 十进制整数；伪码或带小数点时返回 None。"""
+    out = decode_bcd(bits, code)
+    if out is None or '.' in out:
         return None
-    out = 0
-    for i in range(0, len(s), 4):
-        nibble = int(s[i:i + 4], 2)
-        if nibble > 9:  # 1010~1111 是 BCD 的非法码（伪码）
-            return None
-        out = out * 10 + nibble
-    return out
+    return int(out)
 
 
 def bin_to_gray(bits):
@@ -180,3 +215,92 @@ def machine_codes(value, width=8):
     ones = '1' + ''.join('1' if c == '0' else '0' for c in magnitude)
     twos = format(int(ones, 2) + 1, '0{}b'.format(width))
     return (sign_mag, ones, twos)
+
+
+def split_signed_binary(literal):
+    """'-0.10101' → ('-', '0', '10101')；'-10110' → ('-', '10110', '')。"""
+    s = str(literal).strip().replace(' ', '')
+    sign = ''
+    if s[:1] in '+-':
+        sign, s = s[0], s[1:]
+    intpart, _, fracpart = s.partition('.')
+    intpart = intpart or '0'
+    if any(c not in '01' for c in intpart + fracpart):
+        raise ValueError(f'{literal!r} 不是二进制数')
+    return (sign, intpart, fracpart)
+
+
+def _invert(bits):
+    return ''.join('1' if c == '0' else '0' for c in bits)
+
+
+def machine_codes_binary(literal, width=8):
+    """带符号二进制字面量 → (原码, 反码, 补码)。教材的两类写法都支持：
+
+      · 整数 '-10110'，补零到 width 位（1 位符号 + width-1 位数值）
+      · 定点小数 '-0.10101'，保留原位数，写成 '1.01011'（符号位 . 数值位）
+
+    小数形态不补零也不截断 —— 教材里 [N]补 的位数就是原数的位数，
+    随手补到 8 位反而会把 -0.1100 和 -0.11000000 变成两道不同的题。
+    """
+    sign, intpart, fracpart = split_signed_binary(literal)
+    if not fracpart:
+        return machine_codes(int(intpart, 2) * (-1 if sign == '-' else 1), width)
+
+    if intpart.strip('0'):
+        raise ValueError('定点小数的整数部分必须是 0')
+    if not fracpart.strip('0'):
+        raise ValueError('0 的机器数有正零负零之争，不出这种题')
+    if sign != '-':
+        return (f'0.{fracpart}',) * 3
+
+    ones = _invert(fracpart)
+    twos = format(int(ones, 2) + 1, '0{}b'.format(len(fracpart)))
+    return (f'1.{fracpart}', f'1.{ones}', f'1.{twos}')
+
+
+def twos_bits(value, width=8):
+    """有符号整数 → 补码位串。跟 machine_codes 不同，这里收得下 -2^(n-1)。"""
+    limit = 1 << (width - 1)
+    if not -limit <= value <= limit - 1:
+        raise ValueError(f'{value} 超出 {width} 位补码范围 [{-limit}, {limit - 1}]')
+    return format(value & ((1 << width) - 1), '0{}b'.format(width))
+
+
+def twos_add(a, b, width=8):
+    """补码加法：减法转加法的那套。返回 (结果补码, 真值, 是否溢出)。
+
+    符号位产生的进位直接丢掉 —— 这是补码能把减法做成加法的关键，
+    也是教材例题里"由于符号位产生了进位，因此要将此进位丢掉"那句话。
+    溢出另算：两个同号数相加得出异号结果，就是真溢出，丢进位救不回来。
+    """
+    mask = (1 << width) - 1
+    raw = (int(twos_bits(a, width), 2) + int(twos_bits(b, width), 2)) & mask
+    value = raw - (1 << width) if raw >> (width - 1) else raw
+    return (format(raw, '0{}b'.format(width)), value, value != a + b)
+
+
+def _frac_to_int(literal, n):
+    """'-0.1100' + n=4 → -12：定点小数按 2^n 放大成整数，补码规则完全一样。"""
+    sign, intpart, fracpart = split_signed_binary(literal)
+    if intpart.strip('0'):
+        raise ValueError('定点小数的整数部分必须是 0')
+    value = int(fracpart.ljust(n, '0'), 2) if fracpart else 0
+    return -value if sign == '-' else value
+
+
+def twos_add_fraction(a, b):
+    """定点小数的补码加法，输入形如 '-0.1100'。返回 (结果补码, 真值二进制, 是否溢出)。
+
+    1 位符号 + n 位小数的定点补码，和 n+1 位整数补码是同一套算术 ——
+    放大 2^n 倍做完再缩回来，不必单独写一遍进位逻辑。
+    """
+    n = max(len(split_signed_binary(x)[2]) for x in (a, b))
+    ia, ib = _frac_to_int(a, n), _frac_to_int(b, n)
+    total = ia + ib
+    mask = (1 << (n + 1)) - 1
+    raw = (ia & mask) + (ib & mask) & mask
+    value = raw - (1 << (n + 1)) if raw >> n else raw
+    bits = format(raw, '0{}b'.format(n + 1))
+    truth = ('-' if value < 0 else '') + '0.' + format(abs(value), '0{}b'.format(n))
+    return (f'{bits[0]}.{bits[1:]}', truth, value != total)

@@ -525,7 +525,8 @@ def test_number_system_answers_itself():
 def test_number_system_covers_every_variant():
     seen = {registry.build('number-system', s).params['variant']
             for s in range(300)}
-    assert seen == {'radix', 'precision', 'bcd', 'gray', 'complement'}, seen
+    assert seen == {'radix', 'precision', 'bcd', 'gray',
+                    'complement', 'twos'}, seen
 
 
 def test_number_system_is_deterministic():
@@ -549,6 +550,73 @@ def test_render_blockquote():
     assert '<blockquote>' in out
     assert '&gt;' not in out
     assert out.count('<p>') == 3   # 正文一段 + 引用里两行
+
+
+# --------------------------------------------- 码制与补码运算（课件例题为准）
+
+def test_numbering_excess3():
+    """余 3 码就是 8421 每位加 3，所以 0 不再是全 0。"""
+    assert numbering.encode_bcd('0', '余3') == '0011'
+    assert numbering.encode_bcd('9', '余3') == '1100'
+    assert numbering.decode_bcd('10010111.01011010', '余3') == '64.27'
+    # 课件第 15 张：余3码 10010101.10101000 对应十进制 62.75
+    assert numbering.decode_bcd('10010101.10101000', '余3') == '62.75'
+    assert numbering.decode_bcd('0001', '余3') is None   # 余3 的伪码在低端
+    assert numbering.decode_bcd('0001', '8421') == '1'   # 同一个码在 8421 下合法
+
+
+def test_numbering_bcd_keeps_fractions():
+    """BCD 逐位编码，所以十进制小数不会变成无限循环 —— 这正是它的卖点。"""
+    assert numbering.encode_bcd('64.27') == '01100100.00100111'
+    assert numbering.decode_bcd('01100100.00100111') == '64.27'
+
+
+def test_numbering_machine_codes_binary():
+    """课件第 8、10、12 张的原题。"""
+    assert numbering.machine_codes_binary('-10110')[2] == '11101010'
+    assert numbering.machine_codes_binary('-0.10101') == ('1.10101', '1.01010',
+                                                          '1.01011')
+    assert numbering.machine_codes_binary('-0.1100')[2] == '1.0100'
+    assert numbering.machine_codes_binary('-0.0010')[2] == '1.1110'
+    # 小数机器数不补零：位数就是原数的位数
+    assert numbering.machine_codes_binary('-0.1100')[2] != '1.01000000'
+
+
+def test_numbering_twos_add():
+    """课件第 11 张：3-2 和 2-3 的补码实现。"""
+    assert numbering.twos_add(3, -2) == ('00000001', 1, False)
+    assert numbering.twos_add(2, -3) == ('11111111', -1, False)
+    assert numbering.twos_add(100, 50)[2] is True    # 同号相加变号 = 溢出
+    assert numbering.twos_bits(-128) == '10000000'   # machine_codes 收不下的边界
+
+
+def test_numbering_twos_add_fraction():
+    """课件第 12 张：N1=-0.1100, N2=-0.0010。"""
+    bits, truth, over = numbering.twos_add_fraction('-0.1100', '-0.0010')
+    assert (bits, truth, over) == ('1.0010', '-0.1110', False)
+    bits, truth, over = numbering.twos_add_fraction('-0.1100', '0.0010')
+    assert (bits, truth, over) == ('1.0110', '-0.1010', False)
+
+
+def test_number_system_radix_stem_does_not_leak_answer():
+    """题面里举例说明作答格式时，别把本题答案当例子写进去。"""
+    for seed in range(400):
+        task = registry.build('number-system', seed)
+        if task.params['variant'] != 'radix':
+            continue
+        answer = str(task.params['answer'])
+        if len(answer) >= 2:
+            assert answer not in task.stem, (seed, answer)
+
+
+def test_number_system_twos_never_overflows():
+    """溢出时"结果真值"没有正确答案可填，这类题不该被生成出来。"""
+    for seed in range(1500):
+        task = registry.build('number-system', seed)
+        if task.params['variant'] != 'twos':
+            continue
+        results = grading.grade_task(task, task.params['answer'])
+        assert results and all(v.ok for _, v in results), (seed, task.params)
 
 
 def _main():
